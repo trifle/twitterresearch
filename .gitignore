@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# sensitive information
+keys.yaml
+
+# Sphinx documentation
+docs/_build/
+
+# Data files
+*.db
+*.gz
+*.db-journal
+*.graphml
+*.gz

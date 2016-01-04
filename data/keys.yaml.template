@@ -1,0 +1,7 @@
+# Keyfile holding your twitter API keys
+# Keep this file secret, don't add it to version control or put it in any public place!
+
+client_key: ''
+client_secret: ''
+resource_owner_key: ''
+resource_owner_secret: ''
