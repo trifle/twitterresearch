@@ -1,3 +1,6 @@
+# Copyright (C) 2016 Pascal Jürgens and Andreas Jungherr
+# See License.txt
+
 # Tutorial: Time Series Analysis - Mentions of Candidates in Twitter
 
 # load library
@@ -71,9 +74,9 @@ debate_start=as.POSIXct(strptime(c("2015-10-28 17"),"%Y-%m-%d %H"))
 
 plot_all_candidate_mentions_hourly<-ggplot(
 	plot_all_candidate_mentions_hourly_melted_df,aes(x=date,y=mentions_count,group=names))+
-		geom_line() + 
+		geom_line() +
 		theme_bw()+
-		facet_wrap(~names, nrow=5) + 
+		facet_wrap(~names, nrow=5) +
 		theme(axis.text.x=element_text(angle=45,hjust=1))+
 		xlab("") +
 		scale_x_datetime(
@@ -88,9 +91,9 @@ dev.off()
 
 plot_all_candidate_mentions_hourly_scale_free<-ggplot(
 	plot_all_candidate_mentions_hourly_melted_df,aes(x=date,y=mentions_count,group=names))+
-		geom_line() + 
+		geom_line() +
 		theme_bw()+
-		facet_wrap(~names, nrow=5, scales = "free_y") + 
+		facet_wrap(~names, nrow=5, scales = "free_y") +
 		theme(axis.text.x=element_text(angle=45,hjust=1))+
 		xlab("") +
 		scale_x_datetime(

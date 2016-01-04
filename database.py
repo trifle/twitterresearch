@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2016 Pascal Jürgens and Andreas Jungherr
+# See License.txt
 
 """
 Database Access

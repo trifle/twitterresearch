@@ -1,3 +1,6 @@
+# Copyright (C) 2016 Pascal Jürgens and Andreas Jungherr
+# See License.txt
+
 # Performing network analysis in R
 # Since the network analysis library igraph is available
 # both in R and python, all the following analyses
@@ -20,9 +23,9 @@ rt.net <- read.graph("retweets.graphml", format="graphml")
 # Summary of the network
 summary(rt.net)
 # Should give the following or similar information:
-# IGRAPH D--- 168617 291450 -- 
+# IGRAPH D--- 168617 291450 --
 # + attr: label (v/c), user_id (v/c), id (v/c), id (e/c)
-# This represents a directed network with 168617 users and 
+# This represents a directed network with 168617 users and
 # 291450 edges, that is retweet connections
 
 # Edges and nodes (here called vertices) can be accessed like this:

@@ -1,3 +1,6 @@
+# Copyright (C) 2016 Pascal Jürgens and Andreas Jungherr
+# See License.txt
+
 # Tutorial: Time Series Analysis - Singe Series
 # All messages & #gopdebate
 
