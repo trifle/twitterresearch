@@ -131,6 +131,10 @@ def stream(on_tweet=None, on_notification=None, track=None, follow=None):
             print(tweet["text"])
         streaming.stream(on_tweet=pt, track=["#cdu", "#spd"])
 
+    Note: While Twitter allows combinations of track and follow parameters,
+    we encourage chosing one of both and performing any additional filtering
+    in post processing. This makes reasoning about sampling and erros easier.
+
     :param on_tweet:
     :type on_tweet: function
     :param on_notification:
