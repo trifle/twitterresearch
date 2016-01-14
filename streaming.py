@@ -91,6 +91,7 @@ def backoff(errorcode=None):
     # Somewhat unusual syntax: the bracket forces computation of the
     # time delta, and total_seconds is called on that.
     time_since_error = (now - last_error_date).total_seconds()
+    last_error_date = now
 
     # If the last error was more than 30 minutes ago, reset the wait duration to one minute
     base_sleep = last_error_wait if time_since_error < 1800 else 1
