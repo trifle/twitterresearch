@@ -58,7 +58,10 @@ def authorize(filepath=None):
     """
     # Try to find the file if no path was given
     # find_keyfile returns a generator and .next() gives the first match
-    filepath = filepath or next(find_keyfile())
+    try:
+        filepath = filepath or next(find_keyfile())
+    except StopIteration:
+        raise Exception("No Keyfile found - please place keys.yaml with your tokens in the project directory or pass a custom filepath to the authorize() function")
     # Load credentials from keyfile
     with open(filepath, 'r') as f:
         keys = yaml.load(f)
