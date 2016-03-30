@@ -170,7 +170,9 @@ def save_track_keywords():
     outfile = open("keywords_example.json", "w")
 
     def save_tweet(tweet):
-        outfile.write(tweet)
+        json.dump(tweet, outfile)
+        # Insert a newline after one tweet
+        outfile.write("\n")
     keywords = ["politics", "election"]
     stream = streaming.stream(
         on_tweet=save_tweet, on_notification=print_notice, track=keywords)
@@ -200,7 +202,9 @@ def save_follow_users():
     outfile = open("user_example.json", "w")
 
     def save_tweet(tweet):
-        outfile.write(tweet)
+        json.dump(tweet, outfile)
+        # Insert a newline after one tweet
+        outfile.write("\n")
     users = ["807095", "2467791"]
     stream = streaming.stream(
         on_tweet=save_tweet, on_notification=print_notice, follow=users)
