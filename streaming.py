@@ -53,7 +53,7 @@ import logging
 auth = twitter_auth.authorize()
 
 # We use these global variables to store information about errors
-last_error_date = datetime.timedelta(0)
+last_error_date = None
 last_error_wait = 0
 
 
@@ -89,8 +89,13 @@ def backoff(errorcode=None):
 
     now = datetime.datetime.utcnow()
     # Somewhat unusual syntax: the bracket forces computation of the
-    # time delta, and total_seconds is called on that.
-    time_since_error = (now - last_error_date).total_seconds()
+    # time delta, and total_seconds is called on that
+    if last_error_date:
+        time_since_error = (now - last_error_date).total_seconds()
+    else:
+        time_since_error = 1800  # The exact amount doesn't matter
+        # since we only check whether there was an error in the last
+        # half hour below
     last_error_date = now
 
     # If the last error was more than 30 minutes ago, reset the wait duration to one minute
