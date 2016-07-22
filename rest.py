@@ -62,6 +62,7 @@ rate_limit = {'calls': 180, 'expires': datetime.datetime.utcnow()}
 USER_TIMELINE_URL = 'https://api.twitter.com/1.1/statuses/user_timeline.json'
 TWEETS_URL = 'https://api.twitter.com/1.1/statuses/lookup.json'
 USERS_URL = 'https://api.twitter.com/1.1/users/lookup.json'
+SEARCH_URL = 'https://api.twitter.com/1.1/search/tweets.json'
 
 # ----------------
 # HELPER FUNCTIONS
@@ -134,6 +135,25 @@ def throttled_call(*args, **kwargs):
 # -----------------------
 # DATA FETCHING FUNCTIONS
 # -----------------------
+
+
+def search_tweets(query, **kwargs):
+    """
+    Fetch tweets from twitter's search.
+    Optional parameters are passed on to the requests library
+
+    :param query:
+    :type query: string including search operators
+    :returns: tuple (result object, list of tweets, search metadata)
+    """
+    # Set number of fetched tweets to the given amount, else to 200
+    kwargs['count'] = kwargs.get('count', 200)
+    # Set the query parameter
+    kwargs['q'] = query
+    result = throttled_call(SEARCH_URL, params=kwargs)
+    # Decode JSON
+    response_data = json.loads(result.text)
+    return (result, response_data['statuses'], response_data['search_metadata'])
 
 
 def fetch_user_tweets(user, **kwargs):
