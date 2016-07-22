@@ -21,6 +21,11 @@ for page in archive:
 
 ```
 
+## FAQ
+
+- I'm getting unicode errors on windows, what can I do?  
+    Make sure that your windows install of python can print unicode characters to screen without throwing errors. If in doubt, [this library](https://anaconda.org/pypi/win_unicode_console) might help.
+
 
 You are free to use and adapt the scripts provided in our twitterresearch package in your research. If you do so, please cite the package by providing the following information:
 
