@@ -185,7 +185,10 @@ def deduplicate_lowercase(l):
     - Deduplicates the list by converting it into a set and back to a list
     """
     lowercase = [e.lower() for e in l]
-    deduplicated = list(set(lowercase))
+    valid = filter(None, lowercase)
+    if len(valid) != len(lowercase):
+        logging.warning("The input file had {0} empty lines, skipping those. Please verify that it is complete and valid.".format(len(lowercase) - len(valid)))
+    deduplicated = list(set(valid))
     return deduplicated
 
 
