@@ -438,7 +438,8 @@ def top_retweets(n=50):
     """
     rt_counts = {}
     # all retweets
-    retweets = database.Tweet.select(database.Tweet.retweet).where(database.Tweet.retweet.is_null(False)).group_by(database.Tweet.retweet)
+    retweets = database.Tweet.select(database.Tweet.retweet).where(
+        database.Tweet.retweet.is_null(False)).group_by(database.Tweet.retweet)
     for tweet in retweets:
         rt_counts[tweet.retweet.id] = tweet.retweet.retweets.count()
     from collections import Counter
@@ -451,6 +452,34 @@ def top_retweets(n=50):
     return results
 
 
+def top_retweets_straight(n=50):
+    """
+    Get N most retweeted Tweets directly via the database.
+    The query logic is a bit contrived.
+
+    Returns tweet objects which are actually retweets but contain
+    the retweet count as attribute "rt_count". To get the original (retweeted) Tweet,
+    refer to the "retweet_id" and "retweet" fields.
+
+    Example:
+    for tweet in top_retweets_straight():
+        print(tweet.rt_count, tweet.retweet.id, tweet.retweet.text)
+
+    """
+    # Alias for RT count
+    rt_count = peewee.fn.Count(database.Tweet.retweet_id)
+    # Directly aggregate in DB by counting retweet_id field and then grouping
+    # by current tweet id.
+    retweets = (
+        database.Tweet
+        .select(database.Tweet, rt_count.alias("rt_count"))
+        .where(database.Tweet.retweet_id > 0)
+        .group_by(database.Tweet.retweet_id)
+        .order_by(rt_count.desc())
+    )
+    return retweets.limit(n)
+
+
 def export_retweet_text(n=50):
     """
     Find the most retweeted tweets and export them to a CSV file
@@ -458,7 +487,8 @@ def export_retweet_text(n=50):
 
     rt_counts = {}
     # all retweets
-    retweets = database.Tweet.select(database.Tweet.retweet).where(database.Tweet.retweet.is_null(False)).group_by(database.Tweet.retweet)
+    retweets = database.Tweet.select(database.Tweet.retweet).where(
+        database.Tweet.retweet.is_null(False)).group_by(database.Tweet.retweet)
     for tweet in retweets:
         rt_counts[tweet.retweet.id] = tweet.retweet.retweets.count()
     from collections import Counter
@@ -468,4 +498,5 @@ def export_retweet_text(n=50):
         f.write("tweet text, count\n")
         for k, v in c.most_common(n):
             tweet_text = database.Tweet.get(id=k).text
-            f.write("{0},{1}\n".format(tweet_text.replace("\n", "<newline>"), v))
+            f.write("{0},{1}\n".format(
+                tweet_text.replace("\n", "<newline>"), v))
