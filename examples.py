@@ -174,8 +174,13 @@ def save_track_keywords():
         # Insert a newline after one tweet
         outfile.write("\n")
     keywords = ["politics", "election"]
-    stream = streaming.stream(
-        on_tweet=save_tweet, on_notification=print_notice, track=keywords)
+    try:
+        stream = streaming.stream(
+            on_tweet=save_tweet, on_notification=print_notice, track=keywords)
+    except (KeyboardInterrupt, SystemExit):
+        logging.error("User stopped program, exiting!")
+        outfile.flush()
+        outfile.close()
 
 
 def follow_users():
