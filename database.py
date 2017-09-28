@@ -288,7 +288,7 @@ def create_tweet_from_dict(tweet, user=None):
         urls = create_urls_from_entities(tweet["entities"])
         mentions = create_users_from_entities(tweet["entities"])
         # Create new database entry for this tweet
-        t = Tweet.create(
+        t, created = Tweet.get_or_create(
             id=tweet['id'],
             user=user,
             text=tweet['text'],
