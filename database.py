@@ -83,8 +83,6 @@ The major disadvantage of this format is that for each iteration of your analysi
 
 3.  Distributed databases. Both SQL and schemaless databases may allow running co-ordinated clusters across multiple computers. Using such a large system is usually much too complex, expensive and error-prone to be useful for twitter research. We only recommend evaluating distributed storage if your dataset is larger than 1 TB and/or if you have access to existing infrastructure.
 
-
-
 """
 
 import logging
@@ -128,6 +126,12 @@ class Hashtag(BaseModel):
     """
     tag = peewee.CharField(unique=True, primary_key=True)
 
+class Language(BaseModel):
+
+    """
+    Language model.
+    """
+    language = peewee.CharField(unique=True, primary_key=True)
 
 class URL(BaseModel):
 
@@ -135,7 +139,6 @@ class URL(BaseModel):
     URL model.
     """
     url = peewee.CharField(unique=True, primary_key=True)
-
 
 class User(BaseModel):
 
@@ -165,6 +168,7 @@ class Tweet(BaseModel):
     date = peewee.DateTimeField(index=True)
     tags = ManyToManyField(Hashtag)
     urls = ManyToManyField(URL)
+    language = ManyToManyField(Language)
     mentions = ManyToManyField(User)
     reply_to_user = peewee.ForeignKeyField(
         User, null=True, index=True, related_name='replies')
@@ -227,6 +231,11 @@ def create_hashtags_from_entities(entities):
         db_tags.append(tag)
     return db_tags
 
+def create_language_from_tweet(tweet):
+    """
+    """
+    language, created = Language.get_or_create(lan=tweet["lang"])
+    return language
 
 def create_urls_from_entities(entities):
     """
@@ -286,12 +295,14 @@ def create_tweet_from_dict(tweet, user=None):
             user = create_user_from_tweet(tweet)
         tags = create_hashtags_from_entities(tweet["entities"])
         urls = create_urls_from_entities(tweet["entities"])
+        language= create_language_from_tweet(tweet)
         mentions = create_users_from_entities(tweet["entities"])
         # Create new database entry for this tweet
         t = Tweet.create(
             id=tweet['id'],
             user=user,
             text=tweet['text'],
+            language=tweet["lang"],
             # We are parsing Twitter's date format using a "magic" parser from the python-dateutil package
             # The resulting datetime object has timezone information attached.
             # However, since SQLite cannot store timezones, that information is stripped away.
@@ -306,6 +317,8 @@ def create_tweet_from_dict(tweet, user=None):
             t.urls = urls
         if mentions:
             t.mentions = mentions
+        if language:
+            t.language = language
         if tweet["in_reply_to_user_id"]:
             # Create a mock user dict so we can re-use create_user_from_tweet
             reply_to_user_dict = {"user":
@@ -551,8 +564,8 @@ def objects_by_interval(Obj, date_attr_name="date", interval="day", start_date=N
 
 # Set up database tables. This needs to run at least once before using the db.
 try:
-    db.create_tables([Hashtag, URL, User, Tweet, Tweet.tags.get_through_model(
-    ), Tweet.urls.get_through_model(), Tweet.mentions.get_through_model()])
+    db.create_tables([Hashtag, URL, User, Language, Tweet, Tweet.tags.get_through_model(
+    ), Tweet.urls.get_through_model(), Tweet.mentions.get_through_model(),Tweet.language.get_through_model()])
 except Exception as exc:
     logging.debug(
         "Database setup failed, probably already present: {0}".format(exc))
