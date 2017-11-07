@@ -126,6 +126,7 @@ class Hashtag(BaseModel):
     """
     tag = peewee.CharField(unique=True, primary_key=True)
 
+
 class Language(BaseModel):
 
     """
@@ -133,12 +134,14 @@ class Language(BaseModel):
     """
     language = peewee.CharField(unique=True, primary_key=True)
 
+
 class URL(BaseModel):
 
     """
     URL model.
     """
     url = peewee.CharField(unique=True, primary_key=True)
+
 
 class User(BaseModel):
 
@@ -168,7 +171,7 @@ class Tweet(BaseModel):
     date = peewee.DateTimeField(index=True)
     tags = ManyToManyField(Hashtag)
     urls = ManyToManyField(URL)
-    language = ManyToManyField(Language)
+    language = peewee.ForeignKeyField(Language, null=True)
     mentions = ManyToManyField(User)
     reply_to_user = peewee.ForeignKeyField(
         User, null=True, index=True, related_name='replies')
@@ -191,7 +194,8 @@ def deduplicate_lowercase(l):
     valid = list(filter(None, l))
     lowercase = [e.lower() for e in valid]
     if len(valid) != len(lowercase):
-        logging.warning("The input file had {0} empty lines, skipping those. Please verify that it is complete and valid.".format(len(lowercase) - len(valid)))
+        logging.warning("The input file had {0} empty lines, skipping those. Please verify that it is complete and valid.".format(
+            len(lowercase) - len(valid)))
     deduplicated = list(set(valid))
     return deduplicated
 
@@ -231,11 +235,13 @@ def create_hashtags_from_entities(entities):
         db_tags.append(tag)
     return db_tags
 
+
 def create_language_from_tweet(tweet):
     """
     """
-    language, created = Language.get_or_create(lan=tweet["lang"])
+    language, created = Language.get_or_create(language=tweet["lang"])
     return language
+
 
 def create_urls_from_entities(entities):
     """
@@ -295,14 +301,13 @@ def create_tweet_from_dict(tweet, user=None):
             user = create_user_from_tweet(tweet)
         tags = create_hashtags_from_entities(tweet["entities"])
         urls = create_urls_from_entities(tweet["entities"])
-        language= create_language_from_tweet(tweet)
+        language = create_language_from_tweet(tweet)
         mentions = create_users_from_entities(tweet["entities"])
         # Create new database entry for this tweet
         t = Tweet.create(
             id=tweet['id'],
             user=user,
             text=tweet['text'],
-            language=tweet["lang"],
             # We are parsing Twitter's date format using a "magic" parser from the python-dateutil package
             # The resulting datetime object has timezone information attached.
             # However, since SQLite cannot store timezones, that information is stripped away.
@@ -429,15 +434,16 @@ def retweet_counts(start_date, stop_date, n=50):
     rt = Tweet.alias()
     rtu = User.alias()
     baseline = (Tweet.select().
-                where(Tweet.date >= to_utc(start_date), Tweet.date < to_utc(stop_date))
+                where(Tweet.date >= to_utc(start_date),
+                      Tweet.date < to_utc(stop_date))
                 )
     query = (baseline.select(Tweet.id, rt.id, rtu.id)
              .join(rt, on=(Tweet.retweet == rt.id))
              .join(rtu, on=(rt.user == rtu.id))
              )
     c = Counter(
-                (tweet.retweet.user.id for tweet in query)
-               )
+        (tweet.retweet.user.id for tweet in query)
+    )
     # We use an ordered dict for the results so that the top results
     # appear first
     from collections import OrderedDict
@@ -533,7 +539,8 @@ def objects_by_interval(Obj, date_attr_name="date", interval="day", start_date=N
     # Determine first object if no start_date given
     # Todo: Maybe prettify this humongous expression.
     start_date = start_date or MST.localize(datetime.datetime(2015, 10, 27, 0))
-    stop_date = stop_date or MST.localize(datetime.datetime(2015, 11, 2, 23, 59))
+    stop_date = stop_date or MST.localize(
+        datetime.datetime(2015, 11, 2, 23, 59))
     # If we wanted to use the first and last element instead of the pre-determined dates,
     # this would be the way to do it:
     # getattr(Obj.select().order_by(date_field.asc()).first(), date_attr_name)
@@ -565,7 +572,7 @@ def objects_by_interval(Obj, date_attr_name="date", interval="day", start_date=N
 # Set up database tables. This needs to run at least once before using the db.
 try:
     db.create_tables([Hashtag, URL, User, Language, Tweet, Tweet.tags.get_through_model(
-    ), Tweet.urls.get_through_model(), Tweet.mentions.get_through_model(),Tweet.language.get_through_model()])
+    ), Tweet.urls.get_through_model(), Tweet.mentions.get_through_model(), ])
 except Exception as exc:
     logging.debug(
         "Database setup failed, probably already present: {0}".format(exc))
