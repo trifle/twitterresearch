@@ -1,4 +1,4 @@
-peewee
+peewee < 3.0
 PyYAML
 requests
 requests-oauthlib
