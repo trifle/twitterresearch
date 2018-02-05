@@ -8,6 +8,7 @@ A starter kit with code for data collection, preparation, and analysis of digita
 *There is a set of working usage examples in the file examples.py*
 
 1.  Install requirements: `pip3 install -r requirements.txt`
+** IMPORTANT NOTE: A new version of the peewee library has been released and breaks some APIs; take care to use the requirements file **
 2.  (optional) install ipython `pip3 install -U ipython`
 3.  start python
 4.  Import libraries, such as `import rest, streaming`
@@ -23,7 +24,7 @@ for page in archive:
 
 ## FAQ
 
-- I'm getting unicode errors on windows, what can I do?  
+- I'm getting unicode errors on windows, what can I do?
     Make sure that your windows install of python can print unicode characters to screen without throwing errors. If in doubt, [this library](https://anaconda.org/pypi/win_unicode_console) might help.
 
 
