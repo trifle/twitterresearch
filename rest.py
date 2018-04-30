@@ -310,5 +310,5 @@ def fetch_user_list_by_screen_name(screen_names=None, **kwargs):
     pages = grouper(screen_names, 100)
     for page in pages:
         result, users = fetch_users(screen_names=page)
-        logging.info("Fetched {0} users from list - {1} calls remaining".format(len(tweets), rate_limit['calls']))
+        logging.info("Fetched {0} users from list - {1} calls remaining".format(len(users), rate_limit['calls']))
         yield users
