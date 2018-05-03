@@ -93,11 +93,66 @@ def wait_for_limit():
     # time delta, and total_seconds is called on that.
     time_to_reset = (rate_limit['expires'] - now).total_seconds()
     # Sleep (wait) until this time has passed
-    logging.error("Rate limit wait triggered, sleeping for {0} seconds".format(time_to_reset))
+    logging.error(
+        "Rate limit wait triggered, sleeping for {0} seconds".format(time_to_reset))
     time.sleep(time_to_reset)
     return time_to_reset
 
 
+def lengthen_text(obj):
+    """
+    Recursively go through objects and replace 'text' fields
+    in dictionaries with their corresponding 'full_text' fields,
+    if available.
+    """
+    if isinstance(obj, list):
+        # the list wrapper is superfluous, strictly speaking
+        # but we don't want to surprise people with what type
+        # of response they get - ie, the results should support
+        # indexing, slicing etc.
+        return list(map(lengthen_text, obj))
+    elif isinstance(obj, dict):
+        if 'full_text' in obj:
+            obj['text'] = obj['full_text']
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                obj[key] = lengthen_text(value)
+    return obj
+
+
+def swap_long_text(requesting_func):
+    """
+    Helper decorator to swap text fields.
+    Twitter returns the full 280 characters in their own field named 'full_text'.
+    People already have their tools set up to work with the old 'text' field, so
+    we place the full text there.
+    
+    Replacing the patched content is a bit messy, since we need to decode json,
+    patch it, encode it and place it back into the response object as bytes.
+
+    :parameters: a function that returns a response object with json
+    :returns: a response object whose entries have had the 'text' field replaced
+    by 'full_text' if available.
+    """
+
+    def wrapper(*args, **kwargs):
+        response = requesting_func(*args, **kwargs)
+        response_json = json.loads(response.text)
+        patched_data = lengthen_text(response_json)
+        # Monkey patching since .text and .content are read-only
+        response._content = bytes(json.dumps(patched_data), encoding='utf-8')
+        return response
+    return wrapper
+
+
+# Explanatory note:
+# We add a decorator here. This is a function that *wraps* around another function
+# manipulating its input and/or output
+# Here, we use it to swap the full_text field into the text_field
+# Benefit: We don't need to change/complicate the function throttled_call
+
+
+@swap_long_text
 def throttled_call(*args, **kwargs):
     """
     Helper function for complying with rate limits.
@@ -109,6 +164,12 @@ def throttled_call(*args, **kwargs):
     # Declare rate_limit as global so we can write to it
     global rate_limit
 
+    # Add tweet_mode keyword to tell twitter we DO want the full 280 character tweet text
+    # This can be disabled via the keyword argument 'NO_LONG_TEXT'
+    # Returned tweets carry the full length text in a field named 'full_text'
+    if not kwargs.get('NO_LONG_TEXT'):
+        kwargs.get('params', {})['tweet_mode'] = 'extended'
+
     # Try as long as we need to succeed
     while True:
         # Take a break if there are less than 4 calls in the current rate limit timeslot
@@ -118,9 +179,11 @@ def throttled_call(*args, **kwargs):
         try:
             result = auth.get(*args, **kwargs)
             # Update remaining calls and expiry date with the new number from twitter
-            rate_limit['calls'] = int(result.headers.get('x-rate-limit-remaining', 0))
+            rate_limit['calls'] = int(
+                result.headers.get('x-rate-limit-remaining', 0))
             if 'x-rate-limit-reset' in result.headers:
-                rate_limit['expires'] = datetime.datetime.utcfromtimestamp(int(result.headers['x-rate-limit-reset']))
+                rate_limit['expires'] = datetime.datetime.utcfromtimestamp(
+                    int(result.headers['x-rate-limit-reset']))
             return result
         # Catch these two errors and continue
         # It is generally a good idea to only catch errors that you anticipate
@@ -196,18 +259,21 @@ def fetch_user_archive(user, **kwargs):
     max_id = None
     while status == 200:
         # If we have a valid max_id, use that; else do a simple normal request
-        result, tweets = fetch_user_tweets(user, max_id=max_id, **kwargs) if max_id else fetch_user_tweets(user)
+        result, tweets = fetch_user_tweets(
+            user, max_id=max_id, **kwargs) if max_id else fetch_user_tweets(user)
         # Set the status variable - if it's not 200, that's an error and the loop exits
         status = result.status_code
         # if tweets is empty then we reached the end of the archive
         if not tweets:
             break
         elif 'errors' in tweets:
-            logging.error("Encountered errors, skipping: {0}".format(tweets['errors']))
+            logging.error(
+                "Encountered errors, skipping: {0}".format(tweets['errors']))
             yield False
         # Calculate the new max_id to use in the next request
         max_id = min((int(t['id']) for t in tweets)) - 1
-        logging.info("Fetched {0} tweets for {1} - {2} calls remaining".format(len(tweets), user, rate_limit['calls']))
+        logging.info("Fetched {0} tweets for {1} - {2} calls remaining".format(
+            len(tweets), user, rate_limit['calls']))
         # Return fetched tweets
         yield tweets
 
@@ -247,7 +313,8 @@ def fetch_tweet_list(ids, **kwargs):
     # be retrieved in one call
     for page in grouper(ids, 100):
         result, tweets = fetch_tweets(page)
-        logging.info("Fetched {0} tweets from list - {1} calls remaining".format(len(tweets), rate_limit['calls']))
+        logging.info(
+            "Fetched {0} tweets from list - {1} calls remaining".format(len(tweets), rate_limit['calls']))
         yield tweets
 
 
@@ -293,7 +360,8 @@ def fetch_user_list_by_id(ids=None, **kwargs):
     pages = grouper(ids, 100)
     for page in pages:
         result, users = fetch_users(ids=page)
-        logging.info("Fetched {0} users from ID list - {1} calls remaining".format(len(tweets), rate_limit['calls']))
+        logging.info(
+            "Fetched {0} users from ID list - {1} calls remaining".format(len(users), rate_limit['calls']))
         yield users
 
 
@@ -310,5 +378,6 @@ def fetch_user_list_by_screen_name(screen_names=None, **kwargs):
     pages = grouper(screen_names, 100)
     for page in pages:
         result, users = fetch_users(screen_names=page)
-        logging.info("Fetched {0} users from list - {1} calls remaining".format(len(users), rate_limit['calls']))
+        logging.info(
+            "Fetched {0} users from list - {1} calls remaining".format(len(users), rate_limit['calls']))
         yield users
