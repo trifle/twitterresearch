@@ -2,7 +2,7 @@
 A starter kit with code for data collection, preparation, and analysis of digital trace data collected on Twitter.
 
 # ! HEADS-UP !
-*2021-01-27*
+*2021-01-27*  
 Twitter today announced a much-welcome change in their API licensing. Researchers can now apply for privileged access via the developer dashboard, and receive many of the previously paid features for free, as long as the research is non-commercial. Access requires a project applicaiton. Find out more in this [blog post](https://blog.twitter.com/developer/en_us/topics/tips/2021/enabling-the-future-of-academic-research-with-the-twitter-api.html).
 
 (The following warning no longer applies, but you should still investigate the use of the V2 API which this library has not yet been adapted to.)
